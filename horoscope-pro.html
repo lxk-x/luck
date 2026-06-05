@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星座运势 - 每日卜算</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --gold: #f5a623;
+      --dark-bg: #0a0a1a;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a3e 50%, #0a0a1a 100%);
+      min-height: 100vh;
+      color: #fff;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .stars-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 300;
+      background: linear-gradient(135deg, #667eea 0%, #f5a623 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: 8px;
+    }
+
+    .header p {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+    }
+
+    .date-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .date-bar .icon {
+      font-size: 20px;
+    }
+
+    .date-bar .text {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .date-bar .value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .selection-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .selection-title {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 20px;
+    }
+
+    .zodiac-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .zodiac-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .zodiac-btn:hover,
+    .zodiac-btn.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .zodiac-btn .emoji {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .zodiac-btn .name {
+      font-size: 12px;
+    }
+
+    .result-section {
+      display: none;
+    }
+
+    .result-section.show {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--gold), var(--secondary));
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .zodiac-large {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-info {
+      flex: 1;
+    }
+
+    .zodiac-name {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .zodiac-date {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .luck-overview {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .luck-item {
+      flex: 1;
+      text-align: center;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+
+    .luck-item .icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .luck-item .label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 8px;
+    }
+
+    .luck-item .bar-container {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .luck-item .bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s ease;
+    }
+
+    .bar.love { background: linear-gradient(90deg, #f5576c, #f093fb); }
+    .bar.career { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+    .bar.health { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+    .bar.money { background: linear-gradient(90deg, #fa709a, #fee140); }
+
+    .reading-section {
+      margin-top: 24px;
+    }
+
+    .reading-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reading-text {
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.9);
+      text-indent: 2em;
+    }
+
+    .hexagram-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .hexagram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .hexagram-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .hexagram-symbol {
+      font-size: 48px;
+    }
+
+    .hexagram-text {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .hexagram-change {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .hexagram-meaning {
+      font-size: 14px;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .tips-card {
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+      border: 1px solid rgba(245, 166, 35, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .tips-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips-list {
+      list-style: none;
+    }
+
+    .tips-list li {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips-list li::before {
+      content: '✦';
+      color: var(--gold);
+      font-size: 12px;
+    }
+
+    .footer {
+      text-align: center;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .footer p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .refresh-btn {
+      display: block;
+      margin: 24px auto;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border: none;
+      border-radius: 30px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 600px) {
+      .zodiac-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .luck-overview {
+        flex-direction: column;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .card-header {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-bg" id="starsBg"></div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>✦ 星运卜算 ✦</h1>
+      <p>根据星象与易经，洞悉今日运势</p>
+    </div>
+
+    <div class="date-bar">
+      <span class="icon">📅</span>
+      <div>
+        <div class="text">今日日期</div>
+        <div class="value" id="currentDate"></div>
+      </div>
+      <span class="icon">🌙</span>
+      <div>
+        <div class="text">农历</div>
+        <div class="value" id="lunarDate"></div>
+      </div>
+      <span class="icon">✨</span>
+      <div>
+        <div class="text">今日卦象</div>
+        <div class="value" id="todayHexagram"></div>
+      </div>
+    </div>
+
+    <div class="selection-section">
+      <div class="selection-title">请选择你的星座</div>
+      <div class="zodiac-grid" id="zodiacGrid"></div>
+    </div>
+
+    <div class="result-section" id="resultSection">
+      <div class="main-card" id="mainCard">
+        <div class="card-header">
+          <div class="zodiac-large" id="zodiacLarge"></div>
+          <div class="header-info">
+            <div class="zodiac-name" id="zodiacName"></div>
+            <div class="zodiac-date" id="zodiacDate"></div>
+          </div>
+        </div>
+
+        <div class="luck-overview">
+          <div class="luck-item">
+            <div class="icon">💘</div>
+            <div class="label">爱情</div>
+            <div class="bar-container"><div class="bar love" id="loveBar"></div></div>
+          </div>
+          <div class="luck-item">
+            <div class="icon">💼</div>
+            <div class="label">事业</div>
+            <div class="bar-container"><div class="bar career" id="careerBar"></div></div>
+          </div>
+          <div class="luck-item">
+            <div class="icon">❤️</div>
+            <div class="label">健康</div>
+            <div class="bar-container"><div class="bar health" id="healthBar"></div></div>
+          </div>
+          <div class="luck-item">
+            <div class="icon">💰</div>
+            <div class="label">财运</div>
+            <div class="bar-container"><div class="bar money" id="moneyBar"></div></div>
+          </div>
+        </div>
+
+        <div class="reading-section">
+          <div class="reading-title">📖 今日解读</div>
+          <p class="reading-text" id="readingText"></p>
+        </div>
+      </div>
+
+      <div class="hexagram-card">
+        <div class="hexagram-header">
+          <div class="hexagram-info">
+            <span class="hexagram-symbol" id="hexagramSymbol"></span>
+            <div>
+              <div class="hexagram-text" id="hexagramText"></div>
+              <div class="hexagram-change" id="hexagramChange"></div>
+            </div>
+          </div>
+        </div>
+        <p class="hexagram-meaning" id="hexagramMeaning"></p>
+      </div>
+
+      <div class="tips-card">
+        <div class="tips-title">💡 今日提示</div>
+        <ul class="tips-list" id="tipsList"></ul>
+      </div>
+
+      <button class="refresh-btn" onclick="refreshReading()">🔄 重新卜算</button>
+    </div>
+
+    <div class="footer">
+      <p>🌟 愿星辰指引你的道路 🌟</p>
+      <p style="font-size: 11px; margin-top: 8px;">本运势仅供参考，命运掌握在自己手中</p>
+    </div>
+  </div>
+
+  <script>
+    const zodiacs = [
+      { name: '白羊座', emoji: '♈', date: '3月21日 - 4月19日', ruling: '火星', element: '火' },
+      { name: '金牛座', emoji: '♉', date: '4月20日 - 5月20日', ruling: '金星', element: '土' },
+      { name: '双子座', emoji: '♊', date: '5月21日 - 6月21日', ruling: '水星', element: '风' },
+      { name: '巨蟹座', emoji: '♋', date: '6月22日 - 7月22日', ruling: '月亮', element: '水' },
+      { name: '狮子座', emoji: '♌', date: '7月23日 - 8月22日', ruling: '太阳', element: '火' },
+      { name: '处女座', emoji: '♍', date: '8月23日 - 9月22日', ruling: '水星', element: '土' },
+      { name: '天秤座', emoji: '♎', date: '9月23日 - 10月23日', ruling: '金星', element: '风' },
+      { name: '天蝎座', emoji: '♏', date: '10月24日 - 11月22日', ruling: '冥王星', element: '水' },
+      { name: '射手座', emoji: '♐', date: '11月23日 - 12月21日', ruling: '木星', element: '火' },
+      { name: '摩羯座', emoji: '♑', date: '12月22日 - 1月19日', ruling: '土星', element: '土' },
+      { name: '水瓶座', emoji: '♒', date: '1月20日 - 2月18日', ruling: '天王星', element: '风' },
+      { name: '双鱼座', emoji: '♓', date: '2月19日 - 3月20日', ruling: '海王星', element: '水' }
+    ];
+
+    const hexagrams = [
+      { symbol: '乾', name: '乾为天', meaning: '天行健，君子以自强不息。今日宜积极进取，把握良机。', change: '初九：潜龙勿用' },
+      { symbol: '坤', name: '坤为地', meaning: '地势坤，君子以厚德载物。今日宜修身养性，积累德行。', change: '初六：履霜，坚冰至' },
+      { symbol: '屯', name: '水雷屯', meaning: '云雷屯，君子以经纶。今日宜谋划布局，厚积薄发。', change: '初九：磐桓，利居贞' },
+      { symbol: '蒙', name: '山水蒙', meaning: '山下出泉，君子以果行育德。今日宜学习进修，启迪智慧。', change: '初六：发蒙，利用刑人' },
+      { symbol: '需', name: '水天需', meaning: '云上于天，君子以饮食宴乐。今日宜等待时机，养精蓄锐。', change: '初九：需于郊，利用恒' },
+      { symbol: '讼', name: '天水讼', meaning: '天与水违行，君子以作事谋始。今日宜慎言慎行，避免争执。', change: '初六：不永所事' },
+      { symbol: '师', name: '地水师', meaning: '地中有水，君子以容民畜众。今日宜团结协作，凝聚力量。', change: '初六：师出以律' },
+      { symbol: '比', name: '水地比', meaning: '地上有水，先王以建万国。今日宜广结善缘，和谐共处。', change: '初六：有孚比之' },
+      { symbol: '小畜', name: '风天小畜', meaning: '风行天上，君子以懿文德。今日宜培养品德，积累小成。', change: '初九：复自道' },
+      { symbol: '履', name: '天泽履', meaning: '上天下泽，君子以辨上下。今日宜谨言慎行，循礼而行。', change: '初九：素履往' },
+      { symbol: '泰', name: '地天泰', meaning: '天地交泰，后以财成天地之道。今日宜顺势而为，诸事顺遂。', change: '初九：拔茅茹' },
+      { symbol: '否', name: '天地否', meaning: '天地不交，君子以俭德辟难。今日宜收敛守拙，静待转机。', change: '初六：拔茅茹' }
+    ];
+
+    const readings = {
+      '白羊座': {
+        love: ['今日桃花旺盛，单身者有望邂逅良缘。', '感情上宜主动出击，把握机会。', '有伴侣者注意沟通方式，避免冲动。'],
+        career: ['事业运佳，适合展示才华。', '领导对你的表现表示认可。', '团队合作顺利，注意协调沟通。'],
+        health: ['精力充沛，适合运动锻炼。', '注意饮食均衡，避免暴饮暴食。', '保持良好作息，精神状态佳。'],
+        money: ['财运不错，有机会获得意外收入。', '投资理财宜谨慎，不宜冒进。', '注意合理规划开支。']
+      },
+      '金牛座': {
+        love: ['今日魅力四射，异性缘极佳。', '有伴侣者感情升温，甜蜜加倍。', '单身者有望遇到心仪对象。'],
+        career: ['职场表现出色，获得认可。', '适合处理财务相关事务。', '耐心与坚持终将获得回报。'],
+        health: ['身体健康，状态良好。', '注意颈椎和眼睛的保养。', '饮食宜清淡，有益健康。'],
+        money: ['财运亨通，投资理财有望获利。', '收入稳定，财务状况良好。', '宜储蓄积累，为未来规划。']
+      },
+      '双子座': {
+        love: ['风趣幽默吸引众多目光。', '沟通顺畅，感情交流愉快。', '注意不要过于多变，保持专注。'],
+        career: ['思维敏捷，创意无限。', '表达能力达到巅峰，适合演讲谈判。', '学习新知识，提升技能。'],
+        health: ['思维活跃，精神状态佳。', '注意用脑过度，适当休息。', '户外活动有利于身心健康。'],
+        money: ['偏财运不错，有意外收获。', '灵活理财，寻找新机会。', '注意理性消费，避免冲动购物。']
+      },
+      '巨蟹座': {
+        love: ['家庭温馨，感情和睦。', '宜与家人共度美好时光。', '情绪敏感，注意调节心态。'],
+        career: ['按部就班，稳步推进。', '适合处理家庭相关事务。', '不宜冒进，稳扎稳打。'],
+        health: ['注意饮食规律，保护肠胃。', '情绪影响健康，保持心情舒畅。', '居家放松，调养身心。'],
+        money: ['收支平衡，财务稳定。', '宜规划家庭开支。', '避免不必要的花费。']
+      },
+      '狮子座': {
+        love: ['魅力四射，吸引异性目光。', '自信心爆棚，展现个人风采。', '注意不要过于骄傲，保持谦逊。'],
+        career: ['领导力得到展现。', '团队合作顺利，成为核心人物。', '适合接受新挑战，展示实力。'],
+        health: ['精力充沛，活力四射。', '注意心脏和血压的健康。', '适度运动，保持身材。'],
+        money: ['财运不错，有机会获得奖励。', '慷慨大方，但注意合理消费。', '投资理财宜谨慎。']
+      },
+      '处女座': {
+        love: ['细致体贴，关心他人。', '感情上需要主动一些。', '不要过于挑剔，学会包容。'],
+        career: ['细致认真，工作效率高。', '适合处理细节事务。', '注意不要过于追求完美。'],
+        health: ['注重养生，健康意识强。', '注意神经系统的调节。', '保持规律作息，有益健康。'],
+        money: ['理财能力强，善于规划。', '精打细算，收支有度。', '宜稳健投资，避免风险。']
+      },
+      '天秤座': {
+        love: ['社交运佳，桃花朵朵。', '审美能力提升，魅力加分。', '注意选择困难，当断则断。'],
+        career: ['社交场合如鱼得水。', '适合谈判协商，达成共识。', '团队协作，和谐共处。'],
+        health: ['心情愉悦，身心健康。', '注意平衡饮食，保持体态。', '艺术活动有利于放松。'],
+        money: ['财运平稳，收支平衡。', '适合购买心仪之物。', '注意理性消费，避免冲动。']
+      },
+      '天蝎座': {
+        love: ['感情深刻，直觉敏锐。', '注意沟通，避免误会。', '神秘感吸引他人注意。'],
+        career: ['适合深度思考，谋划策略。', '执行力强，完成重要任务。', '注意保护隐私。'],
+        health: ['注意情绪调节，避免压抑。', '精力旺盛，适合挑战自我。', '注意生殖系统健康。'],
+        money: ['偏财运势佳，有意外收获。', '投资理财宜谨慎分析。', '注意财务安全。']
+      },
+      '射手座': {
+        love: ['自由奔放，享受当下。', '乐观积极，吸引异性。', '注意不要过于贪玩，珍惜感情。'],
+        career: ['充满活力，勇于冒险。', '适合学习新技能，拓展视野。', '旅行带来新机遇。'],
+        health: ['活力充沛，运动健将。', '注意肝脏和臀部的保养。', '户外活动有益健康。'],
+        money: ['财运起伏，有得有失。', '适合投资自己，提升能力。', '注意节制消费。']
+      },
+      '摩羯座': {
+        love: ['踏实稳重，值得信赖。', '感情上需要表达真实感受。', '注意不要过于严肃，增添情趣。'],
+        career: ['踏实肯干，稳步发展。', '适合制定长期计划。', '领导能力得到认可。'],
+        health: ['注意骨骼和关节的健康。', '工作压力大，注意放松。', '保持规律作息。'],
+        money: ['财运稳定，积累财富。', '适合长期投资规划。', '注意不要过于吝啬。']
+      },
+      '水瓶座': {
+        love: ['独特个性吸引他人。', '思想开放，容易沟通。', '注意不要过于疏离，保持联系。'],
+        career: ['创新思维，奇思妙想。', '适合创业和发明创造。', '独特见解让人眼前一亮。'],
+        health: ['注意循环系统健康。', '思维活跃，保持好奇心。', '社交活动有利于身心健康。'],
+        money: ['财运起伏，有新机会。', '适合投资新兴领域。', '注意理性消费。']
+      },
+      '双鱼座': {
+        love: ['浪漫指数爆表，魅力十足。', '直觉力强，感情细腻。', '注意不要过于情绪化。'],
+        career: ['艺术创作灵感丰富。', '适合创意工作和艺术活动。', '同情心强，乐于助人。'],
+        health: ['注意心理健康，保持心情愉快。', '适合冥想和放松。', '注意足部和淋巴系统。'],
+        money: ['财运一般，宜稳健保守。', '适合从事艺术相关的副业。', '注意避免不必要的花费。']
+      }
+    };
+
+    const tips = {
+      luckyColors: ['红色', '橙色', '黄色', '绿色', '青色', '蓝色', '紫色', '粉色', '金色', '银色', '白色', '黑色'],
+      luckyNumbers: ['1', '2', '3', '5', '6', '7', '8', '9'],
+      luckyDirections: ['东', '南', '西', '北', '东南', '西南', '东北', '西北'],
+      taboos: ['避免冲动决策', '不宜与人争执', '注意言行举止', '避免大额投资', '不宜远行', '注意休息']
+    };
+
+    function generateStars() {
+      const bg = document.getElementById('starsBg');
+      for (let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        star.style.width = (Math.random() * 2 + 1) + 'px';
+        star.style.height = star.style.width;
+        bg.appendChild(star);
+      }
+    }
+
+    function getTodayInfo() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const day = now.getDate();
+      const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+      const weekDay = weekDays[now.getDay()];
+      
+      document.getElementById('currentDate').textContent = `${year}年${month}月${day}日 周${weekDay}`;
+      
+      const lunar = getLunarDate(now);
+      document.getElementById('lunarDate').textContent = lunar;
+      
+      const dayOfYear = getDayOfYear(now);
+      const hexIndex = dayOfYear % hexagrams.length;
+      document.getElementById('todayHexagram').textContent = hexagrams[hexIndex].symbol;
+      
+      return { dayOfYear, hexIndex };
+    }
+
+    function getDayOfYear(date) {
+      const start = new Date(date.getFullYear(), 0, 0);
+      const diff = date - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      return Math.floor(diff / oneDay);
+    }
+
+    function getLunarDate(date) {
+      const lunarMonths = ['正', '二', '三', '四', '五', '六', '七', '八', '九', '十', '冬', '腊'];
+      const lunarDays = ['', '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+        '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+        '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
+      
+      const monthIndex = (date.getMonth() + 1) % 12;
+      const dayIndex = Math.min(date.getDate(), 30);
+      return `庚子年${lunarMonths[monthIndex]}月${lunarDays[dayIndex]}`;
+    }
+
+    function renderZodiacGrid() {
+      const grid = document.getElementById('zodiacGrid');
+      zodiacs.forEach(z => {
+        const btn = document.createElement('div');
+        btn.className = 'zodiac-btn';
+        btn.innerHTML = `<span class="emoji">${z.emoji}</span><span class="name">${z.name}</span>`;
+        btn.onclick = () => selectZodiac(z);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectZodiac(zodiac) {
+      document.querySelectorAll('.zodiac-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      const { dayOfYear } = getTodayInfo();
+      generateReading(zodiac, dayOfYear);
+      
+      document.getElementById('resultSection').classList.add('show');
+    }
+
+    function generateReading(zodiac, seed) {
+      const random = seededRandom(seed + zodiac.name.charCodeAt(0));
+      
+      document.getElementById('zodiacLarge').textContent = zodiac.emoji;
+      document.getElementById('zodiacName').textContent = zodiac.name;
+      document.getElementById('zodiacDate').textContent = `${zodiac.date} | 守护星：${zodiac.ruling} | 元素：${zodiac.element}`;
+      
+      const lovePercent = Math.floor(random() * 40 + 50);
+      const careerPercent = Math.floor(random() * 40 + 50);
+      const healthPercent = Math.floor(random() * 40 + 50);
+      const moneyPercent = Math.floor(random() * 40 + 50);
+      
+      animateBar('loveBar', lovePercent);
+      animateBar('careerBar', careerPercent);
+      animateBar('healthBar', healthPercent);
+      animateBar('moneyBar', moneyPercent);
+      
+      const readingText = readings[zodiac.name];
+      let fullReading = '';
+      const keys = ['love', 'career', 'health', 'money'];
+      keys.forEach(key => {
+        const texts = readingText[key];
+        const index = Math.floor(random() * texts.length);
+        fullReading += texts[index] + ' ';
+      });
+      document.getElementById('readingText').textContent = fullReading;
+      
+      const hexIndex = Math.floor(random() * hexagrams.length);
+      const hex = hexagrams[hexIndex];
+      document.getElementById('hexagramSymbol').textContent = hex.symbol;
+      document.getElementById('hexagramText').textContent = hex.name;
+      document.getElementById('hexagramChange').textContent = hex.change;
+      document.getElementById('hexagramMeaning').textContent = hex.meaning;
+      
+      generateTips(random);
+    }
+
+    function seededRandom(seed) {
+      return function() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+    }
+
+    function animateBar(id, percent) {
+      const bar = document.getElementById(id);
+      bar.style.width = '0%';
+      setTimeout(() => {
+        bar.style.width = percent + '%';
+      }, 100);
+    }
+
+    function generateTips(random) {
+      const color = tips.luckyColors[Math.floor(random() * tips.luckyColors.length)];
+      const number = tips.luckyNumbers[Math.floor(random() * tips.luckyNumbers.length)];
+      const direction = tips.luckyDirections[Math.floor(random() * tips.luckyDirections.length)];
+      const taboo = tips.taboos[Math.floor(random() * tips.taboos.length)];
+      
+      const tipsList = document.getElementById('tipsList');
+      tipsList.innerHTML = `
+        <li>幸运色：${color}</li>
+        <li>幸运数字：${number}</li>
+        <li>幸运方位：${direction}</li>
+        <li>今日注意：${taboo}</li>
+      `;
+    }
+
+    function refreshReading() {
+      const activeBtn = document.querySelector('.zodiac-btn.active');
+      if (activeBtn) {
+        const emoji = activeBtn.querySelector('.emoji').textContent;
+        const zodiac = zodiacs.find(z => z.emoji === emoji);
+        const { dayOfYear } = getTodayInfo();
+        generateReading(zodiac, dayOfYear + Math.random());
+      }
+    }
+
+    generateStars();
+    getTodayInfo();
+    renderZodiacGrid();
+  </script>
+</body>
+</html>
